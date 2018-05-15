@@ -1,0 +1,9 @@
+.*.swp
+.*o.cmd
+.tmp_versions/
+Module.symvers
+modules.order
+nct5104_wdt.ko
+nct5104_wdt.mod.c
+nct5104_wdt.mod.o
+nct5104_wdt.o
