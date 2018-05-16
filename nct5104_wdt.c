@@ -1,6 +1,8 @@
 #include <linux/device.h>
 #include <linux/kernel.h>
 #include <linux/module.h>
+#include <linux/of_address.h>
+#include <linux/platform_device.h>
 #include <linux/watchdog.h>
 
 #define MODULE_NAME		"nct5104_wdt"
@@ -233,12 +235,13 @@ static int wdt_probe(void)
 	}
 }
 
-static int __init wdt_init(void)
+/* TODO: fix assumption that base address is strapped to 0x2E */
+static int __init wdt_platform_probe(struct platform_device *pdev)
 {
 	int ret;
 	u8 reg;
 
-	/* TODO: fix assumption that base address is strapped to 0x2E */
+	dev_dbg(&pdev->dev, "%s\n", __func__);
 
 	ret = wdt_probe();
 	if (ret)
@@ -295,12 +298,19 @@ static int __init wdt_init(void)
 	return 0;
 }
 
-static void __exit wdt_exit(void)
-{
-	 watchdog_unregister_device(&wdd);
-}
-module_init(wdt_init);
-module_exit(wdt_exit);
+static const struct of_device_id wdt_dt_ids[] = {
+        { .compatible = "onnn,nct5104d-wdt", },
+        { /* sentinel */ }
+};
+MODULE_DEVICE_TABLE(of, wdt_dt_ids);
+
+static struct platform_driver wdt_driver = {
+	.driver		= {
+		.name	= MODULE_NAME,
+		.of_match_table	= wdt_dt_ids
+	},
+};
+module_platform_driver_probe(wdt_driver, wdt_platform_probe);
 
 MODULE_DESCRIPTION("Watchdog Device Driver for NCT5104D LPC SuperIO");
 MODULE_LICENSE("GPL");
