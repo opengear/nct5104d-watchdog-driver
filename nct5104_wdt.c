@@ -219,20 +219,21 @@ static int wdt_probe(void)
 		return ret;
 
 	chip_id = superio_inw(REG_CHIP_ID);
+	ret = -ENODEV;
 	switch (chip_id) {
 	case NCT5104D_ID_REV_B:
 	case NCT5104D_ID_REV_C:
 		/* matched */
 		pr_debug("Got chip id: 0x%04x\n", chip_id);
-		superio_exit();
-		return 0;
+		ret = 0;
+		break;
 	default:
-		/*
-		 * don't try to superio_exit().
-		 * No use writing magic values if we don't know this device.
-		 */
-		return -ENODEV;
+		/* return -ENODEV */
+		break;
 	}
+
+	superio_exit();
+	return ret;
 }
 
 /* TODO: fix assumption that base address is strapped to 0x2E */
