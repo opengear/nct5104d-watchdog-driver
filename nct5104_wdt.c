@@ -31,8 +31,10 @@
 static int superio_enter(void)
 {
 	/* Reserve IO Addresses for exclusive access. */
-	if (!request_muxed_region(REG_EN, 2, MODULE_NAME))
+	if (!request_muxed_region(REG_EN, 2, MODULE_NAME)) {
+		pr_debug("%s could not enter region\n", __func__);
 		return -EBUSY;
+	}
 
 	/* enter Exteded Function Mode; 0x87 is the magic config key */
 	outb(0x87, REG_EN);
@@ -118,6 +120,12 @@ static int wdt_start(struct watchdog_device *wdev)
 
 	wdt_select();
 
+	pr_debug("wdt status before start: 0x%02x, control & status: 0x%02x, counter mode: 0x%02x, time left: %ds\n",
+		 superio_inb(REG_WDT_STATUS),
+		 superio_inb(REG_WDT_CTRL_STATUS),
+		 superio_inb(REG_WDT_CNTR_MODE),
+		 superio_inb(REG_WDT_CNTR_VALUE));
+
 	/* clear the Time-out event status bit */
 	reg = superio_inb(REG_WDT_CTRL_STATUS);
 	reg &= ~BIT(4);
@@ -136,6 +144,8 @@ static int wdt_start(struct watchdog_device *wdev)
 		 superio_inb(REG_WDT_CTRL_STATUS),
 		 superio_inb(REG_WDT_CNTR_MODE),
 		 superio_inb(REG_WDT_CNTR_VALUE));
+	pr_debug("wdt superio logical device selection was 0x%02x, should be 0x%02x\n",
+		 superio_inb(REG_LDN), LDN_WDT);
 
 	/* sanity check for misbehaving chip */
 	reg = superio_inb(REG_WDT_CNTR_MODE);
