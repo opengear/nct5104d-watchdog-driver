@@ -137,6 +137,11 @@ static int wdt_start(struct watchdog_device *wdev)
 		 superio_inb(REG_WDT_CNTR_MODE),
 		 superio_inb(REG_WDT_CNTR_VALUE));
 
+	/* sanity check for misbehaving chip */
+	reg = superio_inb(REG_WDT_CNTR_MODE);
+	if (reg & BIT(0))
+		pr_err(MODULE_NAME ": control register read non-zero in reserved bit\n");
+
 	superio_exit();
 
 	return 0;
@@ -219,13 +224,17 @@ static int wdt_probe(void)
 		return ret;
 
 	chip_id = superio_inw(REG_CHIP_ID);
+	pr_debug("Got chip id: 0x%04x\n", chip_id);
+
 	ret = -ENODEV;
 	switch (chip_id) {
 	case NCT5104D_ID_REV_B:
 	case NCT5104D_ID_REV_C:
 		/* matched */
-		pr_debug("Got chip id: 0x%04x\n", chip_id);
 		ret = 0;
+		break;
+	case 0xffff:
+		pr_err(MODULE_NAME ": chip ID register returned 0x%04x, hardware fault?\n", chip_id);
 		break;
 	default:
 		/* return -ENODEV */
