@@ -9,7 +9,7 @@
 
 /* TIMEOUT is in seconds */
 #define WATCHDOG_TIMEOUT	60
-#define WATCHDOG_TIMEOUT_MAX	15300	/* (255 * 60) */
+#define WATCHDOG_TIMEOUT_MAX	255
 
 #define REG_CHIP_ID		0x20		/* Chip ID register */
 #define NCT5104D_ID_REV_B	0xC452		/* Chip rev B ID */
